@@ -4,30 +4,35 @@ php:
   - 5.6
   - 7.0
   - 7.1
-  - hhvm
 env:
   global:
     - JAVA_HOME="/usr/lib/jvm/java-8-oracle/jre"
-    - ES_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.1.2.zip"
+    - ES_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.3.zip"
   matrix:
     - SYMFONY="~2.8"
     - SYMFONY="~3.0"
     - SYMFONY="~3.1"
     - SYMFONY="~3.2"
+    - SYMFONY="~3.3"
+    - SYMFONY="~3.4"
+    - SYMFONY="^4.0"
 matrix:
-  allow_failures:
-    - php: hhvm
+  include:
+    # test the latest release (including beta releases)
+    - php: 7.1
+      env: DEPENDENCIES=beta
 addons:
   apt:
     packages:
       - oracle-java8-installer
 install:
-  # Container based PHP image ues PHP 5.6.5, once it will be upgraded sudo will be not necessary
+  # Container based PHP image use PHP 5.6.5, once it will be upgraded sudo will be not necessary
   - sudo apt-get install -y oracle-java8-set-default
   - curl -L -o elasticsearch.zip $ES_URL
   - unzip elasticsearch.zip
   - ./elasticsearch-*/bin/elasticsearch -d
 before_script:
+  - if [ "$DEPENDENCIES" = "beta" ]; then composer config minimum-stability beta; fi;
   - composer require --no-update symfony/symfony:${SYMFONY}
   - composer config -g github-oauth.github.com $GITHUB_COMPOSER_AUTH
   - composer install --no-interaction --prefer-dist
